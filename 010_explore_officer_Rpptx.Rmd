@@ -1,0 +1,180 @@
+---
+author: "Satoshi Kato"
+title: "Explore officer package for PowerPoint"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output:
+  html_document:
+    fig_caption: yes
+    pandoc_args:
+      - --from
+      - markdown+autolink_bare_uris+tex_math_single_backslash-implicit_figures
+    keep_md: yes
+    toc: yes
+  word_document:
+    toc: yes
+    toc_depth: 3
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(progress = TRUE, 
+                     verbose  = TRUE, 
+                     root.dir = ".")
+
+knitr::opts_chunk$set(collapse = FALSE, 
+                      comment = "#>", 
+                      message = TRUE, 
+                      warning = FALSE, 
+                      include = TRUE,
+                      echo    = TRUE)
+
+```
+
+```{r install.requirements, eval = FALSE}
+install.packages("officer",      dependencies = TRUE)
+
+```
+
+```{r require.packages, message=FALSE}
+require(tidyverse)
+library(magrittr)
+
+require(officer)
+require(flextable)
+
+```
+
+# Just trace
+
+according to 
+
+https://davidgohel.github.io/officer/articles/offcran/powerpoint.html
+
+```{r}
+my_pres <- read_pptx("pptx_template/my_template.pptx")
+knitr::kable(layout_summary(my_pres))
+
+```
+
+```{r}
+my_pres <- read_pptx()
+my_pres %>% 
+  layout_summary() %>% 
+  knitr::kable()
+
+```
+
+```{r, eval=FALSE}
+my_pres %>% print( target = "pptx_template/officer_default.pptx") 
+
+```
+
+```{r}
+my_pres %>% 
+  layout_properties (
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  select(-master_name) %>%
+  arrange(name, id) %>%
+  knitr::kable(digits = 3)
+
+```
+
+# Add content to a slide
+
+Content must be placed on a slide in a new shape.
+
+`ph_with()` is the unique function you should have to use to add content to a slide. It has 3 arguments, the rpptx object, the object to be printed and the location that define the placeholder where shape will be created.
+
+```{r}
+my_pres <- add_slide(x = my_pres, layout = "Title and Content", master = "Office Theme")
+my_pres
+```
+
+**Note that `ph_with` is to be used instead of functions `ph_with_*` and `ph_with_*_at`**
+
+```{r}
+my_pres <- ph_with(my_pres, value = "Hello world", location = ph_location_type(type = "title"))
+my_pres <- ph_with(my_pres, value = "A footer", location = ph_location_type(type = "ftr"))
+my_pres <- ph_with(my_pres, value = format(Sys.Date()), location = ph_location_type(type = "dt"))
+my_pres <- ph_with(my_pres, value = "slide 1", location = ph_location_type(type = "sldNum"))
+my_pres <- ph_with(my_pres, value = head(letters), location = ph_location_type(type = "body")) 
+
+```
+
+# Write the PowerPoint file
+
+The (updated) Powerpoint file can be generated using the `print()` function along with the target argument:
+
+```{r}
+print(my_pres, target = "010_first_example.pptx") 
+
+```
+
+# Content location
+
+The function `ph_with()` is expecting an argument location that will be used to specify the location of the new shape.
+
+This argument must be an object created from a call to one of the `ph_location*` functions (*placeholder location*). There are several `ph_location*` functions: 
+
+- `ph_location_type()`
+- `ph_location_fullsize()`
+- `ph_location_label()`
+- `ph_location_left()`
+- `ph_location_right()`
+- `ph_location_template()`
+- `ph_location()`
+
+
+```{r}
+ph_location_type(type = "body")
+```
+
+The following code adds text “Hello world” in a new shape.
+
+That shape will inherit its properties from the placeholder that has type `body`. This is defined in the slide layout used by the slide, i.e. `Title and Content` in our example.
+
+```{r}
+text_contents <- c(
+    "Hello world", 
+    "Bonjour monde", 
+    "Blah blah blah"
+  )
+read_pptx() %>% 
+  add_slide() %>% 
+  ph_with(
+    value = text_contents, 
+    location = ph_location_type(type = "body") ) %>% 
+  print(target = "010_ph_with_location_type.pptx") 
+remove_slide()
+```
+
+```{r}
+doc <- read_pptx()
+for(i in 1:30) {
+  doc <- doc %>% 
+  add_slide() %>% 
+  ph_with(
+    value = text_contents, 
+    location = ph_location_type(type = "body") ) 
+}
+
+doc %>% length()
+doc <- remove_slide(doc)
+doc %>% length()
+
+for(i in seq_len(length(doc))) {
+  doc <- remove_slide(doc)
+}
+doc %>% length()
+
+
+```
+
