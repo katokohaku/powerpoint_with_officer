@@ -1,0 +1,74 @@
+---
+title: "Untitled"
+author: "kato_kohaku"
+date: "2020/3/21"
+output: powerpoint_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# R Markdown
+
+This is an R Markdown presentation. 
+
+See easy example
+
+- official
+  - https://support.rstudio.com/hc/en-us/articles/360004672913-Rendering-PowerPoint-Presentations-with-RStudio
+- In Japanese 
+  - https://qiita.com/nozma/items/bbd681490b2aaaf9ec93
+
+
+# Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+  - 2nd Lev.
+    - 3rd Lev.
+      - 4th Lev.
+- Bullet 3
+
+# Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+# Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
+
+# Slide with Styles
+
+* *italic* 
+* **bold** 
+* ~~strikeout~~ 
+* ~subscript~
+* ^superscript^
+* [small caps]{.smallcaps} 
+* `verbatim`
+
+$math-expression$
+$$math-equation$$
+
+[link](target) 
+
+> Block quotations
+
+
+::::::::::::::: {.columns}
+::: {.column}
+- 何らかの説明
+- 何らかの説明2
+- 何らかの説明3
+:::
+
+::: {.column}
+- 何らかの説明
+:::
+::::::::::::::::::::::::::
