@@ -75,17 +75,6 @@ my_pres %>% print( target = "pptx_template/officer_default.pptx")
 
 ```
 
-```{r}
-my_pres %>% 
-  layout_properties (
-    layout = "Title and Content",
-    master = "Office Theme"
-  ) %>% 
-  select(-master_name) %>%
-  arrange(name, id) %>%
-  knitr::kable(digits = 3)
-
-```
 
 # Add content to a slide
 
@@ -114,7 +103,7 @@ my_pres <- ph_with(my_pres, value = head(letters), location = ph_location_type(t
 The (updated) Powerpoint file can be generated using the `print()` function along with the target argument:
 
 ```{r}
-print(my_pres, target = "010_first_example.pptx") 
+print(my_pres, target = "./output/010_first_example.pptx") 
 
 ```
 
@@ -122,7 +111,13 @@ print(my_pres, target = "010_first_example.pptx")
 
 The function `ph_with()` is expecting an argument location that will be used to specify the location of the new shape.
 
-This argument must be an object created from a call to one of the `ph_location*` functions (*placeholder location*). There are several `ph_location*` functions: 
+This argument must be an object created from a call to one of the `ph_location*` functions (*placeholder location*). 
+
+```{r}
+ph_location_type(type = "body")
+```
+
+There are several `ph_location*` functions: 
 
 - `ph_location_type()`
 - `ph_location_fullsize()`
@@ -131,11 +126,6 @@ This argument must be an object created from a call to one of the `ph_location*`
 - `ph_location_right()`
 - `ph_location_template()`
 - `ph_location()`
-
-
-```{r}
-ph_location_type(type = "body")
-```
 
 The following code adds text “Hello world” in a new shape.
 
@@ -147,27 +137,57 @@ text_contents <- c(
     "Bonjour monde", 
     "Blah blah blah"
   )
-read_pptx() %>% 
+
+doc <- read_pptx() %>% 
   add_slide() %>% 
   ph_with(
     value = text_contents, 
     location = ph_location_type(type = "body") ) %>% 
-  print(target = "010_ph_with_location_type.pptx") 
-remove_slide()
-```
-
-```{r}
-doc <- read_pptx()
-for(i in 1:30) {
-  doc <- doc %>% 
   add_slide() %>% 
   ph_with(
     value = text_contents, 
-    location = ph_location_type(type = "body") ) 
+    location = ph_location_type(type = "title") ) %>% 
+  add_slide() %>% 
+  ph_with("Hello left", location = ph_location_left() ) %>% 
+  ph_with("Hello right", location = ph_location_right() ) 
+
+doc %>% 
+  print(target = "./output/010_ph_with_location_type.pptx") 
+
+```
+
+the `Title and Content` slide layout has following placeholder with `type`. 
+
+```{r}
+read_pptx() %>% 
+  layout_properties (
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  select(-master_name) %>%
+  arrange(name, id)
+
+```
+
+# Remove slide(s)
+
+When `index` is not specified, **LAST** slide will be removed.
+
+```{r}
+doc <- read_pptx()
+for(i in 1:5) {
+  doc <- doc %>% 
+  add_slide() %>% 
+  ph_with(
+    value = paste("slide", i), 
+    location = ph_location_type(type = "title") ) 
 }
 
 doc %>% length()
+doc <- remove_slide(doc, index = 2)
 doc <- remove_slide(doc)
+doc %>% print(target = "./output/010_remove_2nd_slide.pptx") 
+
 doc %>% length()
 
 for(i in seq_len(length(doc))) {
