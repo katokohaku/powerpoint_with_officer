@@ -2,7 +2,10 @@
 title: "Untitled"
 author: "kato_kohaku"
 date: "2020/3/21"
-output: powerpoint_presentation
+output:
+  powerpoint_presentation: default
+  beamer_presentation: default
+  slidy_presentation: default
 ---
 
 ```{r setup, include=FALSE}
