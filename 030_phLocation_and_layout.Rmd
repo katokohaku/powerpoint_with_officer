@@ -79,10 +79,7 @@ That shape will inherit its properties from the placeholder that has type `body`
 the `Title and Content` slide layout has following placeholder with `type`. 
 
 ```{r}
-my_pres <- read_pptx() %>%         # 初期化
-  add_slide(
-    layout = "Title and Content",  # 1枚目のスライドを追加 
-    master = "Office Theme")
+my_pres <- read_pptx()
 
 ```
 
@@ -92,45 +89,34 @@ my_pres %>%
     layout = "Title and Content",
     master = "Office Theme"
   ) %>% 
-  mutate_if(is.numeric, ~round(., digits = 3))
+  select(master_name:ph_label)
 
 ```
-
-```{r}
-my_pres <- my_pres %>% 
-  ph_with(
-    value = "Hello world", 
-    location = ph_location_type(type = "body")
-  )
-
-```
-
 
 placeholder type to look for in the slide layout, one of 'body', 'title', 'ctrTitle', 'subTitle', 'dt', 'ftr', 'sldNum'.
 
 ```{r}
 my_pres <- my_pres %>%
   add_slide(
-    layout = "Title and Content",
-    master = "Office Theme"
+    layout = "Title and Content", master = "Office Theme"
   ) %>% 
-  ph_with(
-    value    = "メインコンテンツ", 
+  ph_with(                                     # プレースホルダをtypeで指定してコンテンツを設置
+    value    = "メインコンテンツ by type", 
     location = ph_location_type(type = "body")
   ) %>% 
-  ph_with(
+  ph_with(                                     # 次のプレースホルダにコンテンツを設置
     value    = "タイトル", 
     location = ph_location_type(type = "title")
   ) %>% 
-  ph_with(
+  ph_with(                                     # 次のプレースホルダにコンテンツを設置
     value    = "日付", 
     location = ph_location_type(type = "dt")
   ) %>% 
-  ph_with(
+  ph_with(                                     # 次のプレースホルダにコンテンツを設置
     value    = "フッター",
     location = ph_location_type(type = "ftr")
   ) %>% 
-  ph_with(
+  ph_with(                                     # 次のプレースホルダにコンテンツを設置
     value    = "スライド番号", 
     location = ph_location_type(type = "sldNum")
   )
@@ -138,7 +124,33 @@ my_pres <- my_pres %>%
 
 ```
 
+## location by label-name of placeholder
+
+the `Title and Content` slide layout has following placeholder with `ph_label`. 
+
+```{r}
+my_pres %>% 
+  layout_properties (
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  select(master_name:ph_label)
+
+```
+
+```{r}
+my_pres <- my_pres %>%
+  add_slide(layout = "Title and Content", master = "Office Theme") %>% 
+  ph_with(
+    value = "placeholder location by label", 
+    location = ph_location_label(ph_label = "Content Placeholder 2")
+  )
+
+```
+
 ## customized location
+
+`ph_location_left()` and `ph_location_right()` set a content to left and right body-placeholder on slide with "Two Content" layout.
 
 ### Two Content
 
@@ -150,7 +162,7 @@ my_pres %>%
     layout = "Two Content",
     master = "Office Theme"
   ) %>% 
-  mutate_if(is.numeric, ~round(., digits = 3))
+  select(master_name:ph_label)
 
 ```
 
@@ -158,21 +170,23 @@ my_pres %>%
 
 my_pres <- my_pres %>% 
   add_slide(
-    layout = "Two Content",
+    layout = "Two Content",        # 左右コンテンツのレイアウト・スライドを追加
     master = "Office Theme"
   ) %>% 
   ph_with(
     value    = c("左 1", "左 2"), 
-    location = ph_location_left()
+    location = ph_location_left()  # 左側のプレースホルダにコンテンツを設置
   ) %>% 
   ph_with(
     value    = c("右 1", "右 2"), 
-    location = ph_location_right()
+    location = ph_location_right() # 右側のプレースホルダにコンテンツを設置
   ) 
 
 ```
 
 ### Fullsize Content
+
+`ph_location_fullsize()` expands contents size to fulfilled on current slide.
 
 ```{r}
 library(ggplot2)
@@ -187,25 +201,26 @@ my_pres <- my_pres %>%
   add_slide() %>% 
   ph_with(
     value    = gg_plot, 
-    location = ph_location_fullsize()
+    location = ph_location_fullsize()  # スライド全体サイズまでコンテンツを拡大 
   )
 
 ```
 
 ### customized location
 
+`ph_location()` set a NEW placeholder on current slide.
+
 ```{r}
 my_pres <- my_pres %>% 
-  add_slide(
-    layout = "Title and Content",
-    master = "Office Theme"
-  ) %>% 
+  add_slide(layout = "Title and Content", master = "Office Theme") %>% 
   ph_with(
     value = "Add New Placeholder", 
     location = ph_location(
-      left = 3, top = 2, width = 5, height = 2,
-      bg = "wheat",
-      rotation = 15
+      newlabel = "new_ph",    # 新しく設置するプレースホルダの名称（再利用のため）
+      left = 3, top = 2,      # プレースホルダの位置（左上隅の座標）
+      width = 5, height = 2,  # プレースホルダのサイズ
+      bg = "wheat",           # プレースホルダの背景色
+      rotation = 15           # プレースホルダの回転角
     ) 
   )
 
