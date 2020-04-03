@@ -65,35 +65,26 @@ my_pres %>% layout_properties(
   ) %>% 
   select(-master_name) %>%
   arrange(id) %>% 
-  mutate_at(vars(c("offx","offy","cx","cy")), ~ round(., digits = 2))
+  select(id, ph, type, ph_label)
  
 ```
 
+## enumerate all content to be set to respective placeholder
+
+Set all content to each PH of default "Title and Content" slide-layout.
 
 ```{r}
-library(ggplot2)
-gg_plot <- iris %>% 
-  ggplot(aes(Sepal.Length, Petal.Length, color = Species)) +
-  geom_point(size = 3) + 
-  theme_minimal()
-
-```
-
-set all content to each PH of default "Title and Content" slide-layout.
-
-```{r}
+# all content
 content_title    <- "Hello world"
 content_footer   <- "A footer"
 content_date     <- format(Sys.Date())
 content_slideNum <- "slide 1"
-content_body     <- gg_plot
+content_body     <- "body content"
 
-```
-
-Add a slide of default "Title and Content" ph-layout.
-
-```{r}
+# add slide
 my_pres <- add_slide(x = my_pres, layout = "Title and Content", master = "Office Theme")
+
+# set each content to respective placeholder
 my_pres <- ph_with(my_pres, value = content_title,    location = ph_location_type(type = "title"))
 my_pres <- ph_with(my_pres, value = content_footer,   location = ph_location_type(type = "ftr"))
 my_pres <- ph_with(my_pres, value = content_date,     location = ph_location_type(type = "dt"))
@@ -102,6 +93,7 @@ my_pres <- ph_with(my_pres, value = content_body,     location = ph_location_typ
 
 ```
 
+## replace redundancy into wrapper function
 
 ```{r}
 add_TitleAndContent <- function (
@@ -133,10 +125,19 @@ add_TitleAndContent <- function (
   
 ```
 
+### run
+
 ```{r}
+library(ggplot2)
+
+gg_plot <- iris %>% 
+  ggplot(aes(Sepal.Length, Petal.Length, color = Species)) +
+  geom_point(size = 3) + 
+  theme_minimal()
+
 my_pres <- my_pres %>% 
   add_TitleAndContent(
-    title    = "Wrpper version",
+    title    = "Wrapper version",
     body     = gg_plot,
     footer   = "A footer",
     date     = format(Sys.Date()),
