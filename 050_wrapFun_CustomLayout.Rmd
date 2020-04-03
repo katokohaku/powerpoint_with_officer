@@ -1,0 +1,204 @@
+---
+author: "Satoshi Kato"
+title: "Wrapper function to add slide with custom layput"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output:
+  html_document:
+    fig_caption: yes
+    pandoc_args:
+      - --from
+      - markdown+autolink_bare_uris+tex_math_single_backslash-implicit_figures
+    keep_md: no
+    toc: yes
+  word_document:
+    toc: yes
+    toc_depth: 3
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(progress = TRUE, 
+                     verbose  = TRUE, 
+                     root.dir = ".")
+
+knitr::opts_chunk$set(collapse = FALSE, 
+                      comment = "#>", 
+                      message = TRUE, 
+                      warning = FALSE, 
+                      include = TRUE,
+                      echo    = TRUE)
+
+```
+
+```{r install.requirements, eval = FALSE}
+install.packages("officer",      dependencies = TRUE)
+
+```
+
+```{r require.packages, message=FALSE}
+require(tidyverse)
+library(magrittr)
+
+require(officer)
+require(flextable)
+
+```
+
+```{r}
+my_pres <- read_pptx("./pptx_template/my_template.pptx")
+
+```
+
+```{r}
+my_pres %>% 
+  layout_properties(layout = "my_layout_2", master = "my_theme") %>% 
+  select(master_name:ph_label)
+
+```
+
+
+## enumerate all content to be set to respective placeholder
+
+set all content to each PH of custom "my_layout_2" slide-layout with "my_theme" master.
+
+```{r}
+# all content
+c_title <- "title"  
+c_body_top_left     <- "body_top-left"
+c_body_bottom_left  <- "body_bottom-left"
+c_body_top_right    <- "body_top-right"
+c_body_bottom_right <- "body_bottom-right"
+c_date      <- "date"
+c_footer    <- "footer"
+c_slide_num <- "slide_num"
+
+# add slide
+my_pres <- add_slide(x = my_pres, layout = "my_layout_2", master = "my_theme")
+
+# set each content to respective placeholder
+my_pres <- ph_with(my_pres,
+                   value    = c_title,
+                   location = ph_location_label(ph_label = "title"))
+my_pres <- ph_with(my_pres, 
+                   value    = c_body_top_left,
+                   location = ph_location_label(ph_label = "body_top-left"))
+my_pres <- ph_with(my_pres, 
+                   value    = c_body_bottom_left,
+                   location = ph_location_label(ph_label = "body_bottom-left"))
+my_pres <- ph_with(my_pres, 
+                   value    = c_body_top_right,
+                   location = ph_location_label(ph_label = "body_top-right"))
+my_pres <- ph_with(my_pres, 
+                   value    = c_body_top_left,
+                   location = ph_location_label(ph_label = "body_top-left"))
+my_pres <- ph_with(my_pres, 
+                   value    = c_body_bottom_right,
+                   location = ph_location_label(ph_label = "body_bottom-right"))
+my_pres <- ph_with(my_pres,
+                   value    = c_date, 
+                   location = ph_location_label(ph_label = "date"))
+my_pres <- ph_with(my_pres,
+                   value    = c_footer,
+                   location = ph_location_label(ph_label = "footer"))
+my_pres <- ph_with(my_pres, 
+                   value    = c_slide_num,
+                   location = ph_location_label(ph_label = "slide_num"))
+
+```
+
+## replace redundancy into wrapper function
+
+```{r}
+add_myCustomLayout <- function (
+  x,
+  title, 
+  date, footer, slide_num,
+  body_top_left,    body_top_right, 
+  body_bottom_left, body_bottom_right
+  
+) {
+  x <- add_slide(x = my_pres, layout = "my_layout_2", master = "my_theme")
+  
+  if(!missing(title)) {
+    x <- ph_with(x, value = title,
+                 location = ph_location_type(type = "title"))
+  }
+  if(!missing(date)) {
+    x <- ph_with(x, value = date, 
+                 location = ph_location_label(ph_label = "date"))
+  }
+  if(!missing(footer)) {
+    x <- ph_with(x, value = footer,
+                 location = ph_location_label(ph_label = "footer"))
+  }
+  if(!missing(slide_num)) {
+    x <- ph_with(x, value = slide_num,
+                 location = ph_location_label(ph_label = "slide_num"))
+  }
+
+  if(!missing(body_top_left)) {
+    x <- ph_with(x, value = body_top_left,
+                 location = ph_location_label(ph_label = "body_top-left"))
+  }
+  if(!missing(body_bottom_left)) {
+    x <- ph_with(x, value = body_bottom_left,
+                 location = ph_location_label(ph_label = "body_bottom-left"))
+  }
+  if(!missing(body_top_right)) {
+    x <- ph_with(x, value = body_top_right,
+                 location = ph_location_label(ph_label = "body_top-right"))
+  }
+  if(!missing(body_top_left)) {
+    x <- ph_with(x, value = body_top_left,
+                 location = ph_location_label(ph_label = "body_top-left"))
+  }
+  if(!missing(body_bottom_right)) {
+    x <- ph_with(x, value = body_bottom_right,
+                 location = ph_location_label(ph_label = "body_bottom-right"))
+  }
+  
+  return(x)
+}
+  
+```
+
+
+```{r}
+library(ggplot2)
+gg_plot <- iris %>% 
+  ggplot(aes(Sepal.Length, Petal.Length, color = Species)) +
+  geom_point(size = 3) + 
+  theme_minimal()
+
+```
+
+```{r}
+my_pres <- my_pres %>% 
+  add_myCustomLayout (
+    title  = "Wrpper version",
+    footer = "A footer",
+    date   = format(Sys.Date()),
+    slide_num = "slide 2",
+    body_top_left     = "左の図の説明",
+    body_bottom_left  = gg_plot,
+    body_top_right    = "右の図の説明",
+    body_bottom_right = gg_plot
+  )
+
+```
+
+
+# write_pptx
+
+```{r}
+my_pres %>% 
+  print(target = "./output/050_wrapFun_for_custom-layouts.pptx")
+
+my_pres
+```
