@@ -1,0 +1,296 @@
+---
+author: "Satoshi Kato"
+title: "Explore officer package for PowerPoint"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output:
+  html_document:
+    fig_caption: yes
+    pandoc_args:
+      - --from
+      - markdown+autolink_bare_uris+tex_math_single_backslash-implicit_figures
+    keep_md: no
+    toc: yes
+  word_document:
+    toc: yes
+    toc_depth: 3
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(progress = TRUE, 
+                     verbose  = TRUE, 
+                     root.dir = ".")
+
+knitr::opts_chunk$set(collapse = FALSE, 
+                      comment = "#>", 
+                      message = TRUE, 
+                      warning = FALSE, 
+                      include = TRUE,
+                      echo    = TRUE)
+
+```
+
+```{r install.requirements, eval = FALSE}
+install.packages("officer", dependencies = TRUE)
+
+```
+
+```{r require.packages, message=FALSE}
+require(tidyverse)
+library(magrittr)
+
+require(officer)
+require(flextable)
+
+```
+
+# Content location
+
+The function `ph_with()` is expecting an argument location that will be used to specify the location of the new shape.
+
+This argument must be an object created from a call to one of the `ph_location*` functions (*placeholder location*). 
+
+```{r}
+ph_location_type(type = "body")
+```
+
+There are several `ph_location*` functions: 
+
+- `ph_location_type()`
+- `ph_location_label()`
+- `ph_location_fullsize()`
+- `ph_location_left()`
+- `ph_location_right()`
+- `ph_location()`
+
+The following code adds text “Hello world” in a new shape.
+
+That shape will inherit its properties from the placeholder that has type `body`. This is defined in the slide layout used by the slide, i.e. `Title and Content` in our example.
+
+
+## location by type
+
+the `Title and Content` slide layout has following placeholder with `type`. 
+
+```{r}
+my_pres <- read_pptx() %>%         # 初期化
+  add_slide(
+    layout = "Title and Content",  # 1枚目のスライドを追加 
+    master = "Office Theme")
+
+```
+
+```{r}
+my_pres %>% 
+  layout_properties (
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  mutate_if(is.numeric, ~round(., digits = 3))
+
+```
+
+```{r}
+my_pres <- my_pres %>% 
+  ph_with(
+    value = "Hello world", 
+    location = ph_location_type(type = "body")
+  )
+
+```
+
+
+placeholder type to look for in the slide layout, one of 'body', 'title', 'ctrTitle', 'subTitle', 'dt', 'ftr', 'sldNum'.
+
+```{r}
+my_pres <- my_pres %>%
+  add_slide(
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  ph_with(
+    value    = "メインコンテンツ", 
+    location = ph_location_type(type = "body")
+  ) %>% 
+  ph_with(
+    value    = "タイトル", 
+    location = ph_location_type(type = "title")
+  ) %>% 
+  ph_with(
+    value    = "日付", 
+    location = ph_location_type(type = "dt")
+  ) %>% 
+  ph_with(
+    value    = "フッター",
+    location = ph_location_type(type = "ftr")
+  ) %>% 
+  ph_with(
+    value    = "スライド番号", 
+    location = ph_location_type(type = "sldNum")
+  )
+  
+
+```
+
+## customized location
+
+### Two Content
+
+ph_id of officer are diffrent from placeholder index on PPTX-layer
+
+```{r}
+my_pres %>% 
+  layout_properties (
+    layout = "Two Content",
+    master = "Office Theme"
+  ) %>% 
+  mutate_if(is.numeric, ~round(., digits = 3))
+
+```
+
+```{r}
+
+my_pres <- my_pres %>% 
+  add_slide(
+    layout = "Two Content",
+    master = "Office Theme"
+  ) %>% 
+  ph_with(
+    value    = c("左 1", "左 2"), 
+    location = ph_location_left()
+  ) %>% 
+  ph_with(
+    value    = c("右 1", "右 2"), 
+    location = ph_location_right()
+  ) 
+
+```
+
+### Fullsize Content
+
+```{r}
+library(ggplot2)
+gg_plot <- iris %>% 
+  ggplot(aes(Sepal.Length, Petal.Length, color = Species)) +
+  geom_point(size = 3)
+
+```
+
+```{r}
+my_pres <- my_pres %>% 
+  add_slide() %>% 
+  ph_with(
+    value    = gg_plot, 
+    location = ph_location_fullsize()
+  )
+
+```
+
+### customized location
+
+```{r}
+my_pres <- my_pres %>% 
+  add_slide(
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  ph_with(
+    value = "Add New Placeholder", 
+    location = ph_location(
+      left = 3, top = 2, width = 5, height = 2,
+      bg = "wheat",
+      rotation = 15
+    ) 
+  )
+
+```
+
+
+### customized style and location
+
+```{r}
+body_bl <- block_list(
+  fpar(
+    ftext(text = "example of multi-paragraph",
+          prop = fp_text(underlined = TRUE))
+    ),
+  fpar(
+    ftext(text = "Hello ",
+          prop = fp_text(italic  = TRUE, font.size = 48,
+                         font.family = "Times New Roman")),
+    ftext(text = "World",
+          prop = fp_text(color = "red", bold = TRUE) ))
+)
+
+title_bl <- fpar(
+    ftext(text = "Title + Body + Free Object",
+          prop = fp_text(color = "green", font.size = 18))
+  )
+
+my_pres <- my_pres %>% 
+  add_slide(
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  ph_with(
+    value = title_bl, 
+    location = ph_location(
+      left = 4, top = 1, width = 5, height = 0.5, bg = "wheat") 
+  ) %>% 
+  ph_with(
+    value    = body_bl, 
+    location = ph_location_type("body")
+  ) %>% 
+  ph_with(
+    value = gg_plot, 
+    location = ph_location(
+      left = 3, top = 3, width = 4.8, height = 3.6, rotation = 15)
+  )
+
+```
+
+
+# write_pptx
+
+```{r}
+my_pres %>% 
+  print(target = "./output/030_phLocation_and_layouts.pptx")
+
+my_pres
+```
+
+# Remove slide(s)
+
+When `index` is not specified, **LAST** slide will be removed.
+
+```{r}
+my_pres <- read_pptx()
+for(i in 1:5) {
+  my_pres <- my_pres %>% 
+  add_slide() %>% 
+  ph_with(
+    value = paste("slide", i), 
+    location = ph_location_type(type = "title") ) 
+}
+
+my_pres %>% length()
+my_pres <- remove_slide(my_pres, index = 2)
+my_pres <- remove_slide(my_pres)
+my_pres %>% print(target = "./output/010_remove_2nd_slide.pptx") 
+
+my_pres %>% length()
+
+for(i in seq_len(length(my_pres))) {
+  my_pres <- remove_slide(my_pres)
+}
+my_pres %>% length()
+
+
+```
+
