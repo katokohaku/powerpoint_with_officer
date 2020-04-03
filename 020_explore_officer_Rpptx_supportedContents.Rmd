@@ -86,18 +86,14 @@ The following types of content are supported:
 doc <- read_pptx()
 
 doc <- doc %>% 
-  add_slide(layout = "Two Content", master = "Office Theme") %>% 
-  ph_with(value = pi, 
+  add_slide() %>% 
+  ph_with(value = pi,
           location = ph_location_type(type = "title") ) %>% 
-  ph_with(value = as.factor(letters[1:2]),
-          location = ph_location_type(type = "ftr") ) %>% 
-  ph_with(value = c("one blah", "two blah"), 
-          location = ph_location_left() ) %>% 
-  ph_with(value = c("three blah", "four blah"), 
-          location = ph_location_right() ) 
+  ph_with(value = c("箇条書きの１", "箇条書きの２"), 
+          location = ph_location_type(type = "body") )
+
 
 ```
-
 
 ## data.frame
 
@@ -109,6 +105,23 @@ doc <- doc %>%
 
 ```
 
+
+
+# Editable table (flextable)
+
+```{r}
+library(flextable)
+ft <- iris %>% 
+  head() %>% 
+  flextable() %>% 
+  autofit()
+
+doc <- doc %>% 
+  add_slide() %>% 
+  ph_with(value = ft,
+          location = ph_location_type(type = "body") )
+
+```
 
 ## ggplot objects
 
@@ -125,45 +138,25 @@ gg_plot <- ggplot(data = iris ) +
 doc <- doc %>% 
   add_slide() %>% 
   ph_with(value = gg_plot,
-          location = ph_location_fullsize() ) %>% 
+          location = ph_location_type(type = "body") ) %>% 
   ph_with(value = "a ggplot example", 
           location = ph_location_type(type = "title") )
 
 ```
 
-# Image files
-
-```{r}
-img.file <- file.path( R.home("doc"), "html", "logo.jpg" )
-
-doc <- doc %>% 
-  add_slide() %>% 
-  ph_with(value = external_img(img.file, width = 1.39, height = 1.06),
-          location = ph_location_type(type = "body"), 
-          use_loc_size = FALSE)
-
-```
-
-
-# Editable table (flextable)
-
-```{r}
-library(flextable)
-ft <- flextable(head(iris))
-ft <- autofit(ft)
-
-ft
-```
+### fullsize 
 
 ```{r}
 doc <- doc %>% 
   add_slide() %>% 
-  ph_with(value = ft,
-          location = ph_location_type(type = "body") )
+  ph_with(value = gg_plot,
+          location = ph_location_fullsize() ) %>% 
+  ph_with(value = "a ggplot example (fullsize)", 
+          location = ph_location_type(type = "title") )
 
 ```
 
-# Editable graphics (`dml {rvg}`)
+# Editable graphics
 
 - `{rvg}`
   - package for "R Graphics Devices for Vector Graphics Output"
@@ -184,145 +177,69 @@ editable_graph <- rvg::dml(ggobj = gg_plot)
 ```
 
 ```{r}
+library(rvg)
+
 doc <- doc %>% 
   add_slide() %>% 
-  ph_with(value = editable_graph,
+  ph_with(value    = rvg::dml(ggobj = gg_plot),
           location = ph_location_type(type = "body") )
 
 ```
 
 
-# Editable table & graph
+# Image files
 
 ```{r}
+img.file <- file.path( R.home("doc"), "html", "logo.jpg" )
+
 doc <- doc %>% 
-  add_slide(layout = "Two Content", master = "Office Theme") %>% 
-  ph_with(value = "Editable table & graph", 
-          location = ph_location_type(type = "title") ) %>% 
-  ph_with(value = ft, 
-          location = ph_location_left() ) %>% 
-  ph_with(value = editable_graph,
-          location = ph_location_right() ) 
+  add_slide() %>% 
+  ph_with(value = external_img(img.file, width = 4, height = 4),
+          location = ph_location_type(type = "body"), 
+          use_loc_size = FALSE)
 
 ```
 
-```{r}
-doc <- doc %>% 
-  add_slide(layout = "Title and Content", master = "Office Theme") %>% 
-  ph_with(value = "Editable table & graph", 
-          location = ph_location_type(type = "title") ) %>% 
-  ph_with(value = editable_graph, 
-          location = ph_location_type(type = "body") ) %>% 
-  ph_with(value = c("This RVG is from", 
-                    "iris data"),
-          location = ph_location_type(type = "body") )
 
-```
-
-# Multiple paragraphs with customized location
+# Multiple paragraphs with block_list
 
 ```{r}
-# first define a block_list made of fpar ----
-bl <- block_list(
-  fpar(ftext("This is from iris", fp_text(bold = TRUE))),
-  fpar(
-    ftext("This is from ", fp_text(bold = TRUE, font.size = 30)),
-    ftext("iris", prop = fp_text(color = "red", bold = TRUE, font.size = 30) )
-  )
+bold_red     <- ftext(
+  text = "This is BOLD text", 
+  prop = fp_text(
+    bold = TRUE, 
+    color = "red",
+    font.size = 30)
 )
 
-title_bl <- fpar(
-    ftext("Vector Graphics Output & Customized paragraph by officer",
-          fp_text(font.size = 24))
-  )
+italic_ul <- ftext(
+  text = "This is Italic text", 
+  prop = fp_text(
+    italic = TRUE, 
+    underlined = TRUE,
+    font.family = "Times New Roman", 
+    font.size = 48)
+)
 
-```
-
-
-```{r}
-doc <- doc %>% 
-  add_slide() %>% 
-  ph_with(value = bl, 
-          location = ph_location(label = "my_name",
-                                 left = 2, top = 3, width = 4, height = 4, 
-                                 bg = "wheat", rotation = 90) 
-  )
-
-```
-
-```{r}
+bl <- block_list(
+  fpar(bold_red),
+  fpar(italic_ul)
+)
 
 doc <- doc %>% 
   add_slide() %>% 
-  ph_with(value = title_bl, 
-          location = ph_location_type(type = "title") ) %>% 
-  ph_with(value = editable_graph, 
-        location = ph_location_type(type = "body") ) %>% 
-  ph_with(value = bl, 
+  ph_with(value = bl,
           location = ph_location_type(type = "body") )
 
 ```
-
-
-```{r}
-doc <- doc %>% 
-  add_slide() %>% 
-  ph_with(value = title_bl, 
-          location = ph_location_type(type = "title") ) %>% 
-  ph_with(value = editable_graph, 
-          location = ph_location_type(type = "body") ) %>% 
-  ph_with(value = bl, 
-          location = ph_location(label = "my_name",
-                                 left = 1.5, top = 3, width = 3, height = 0, 
-                                 bg = "wheat", rotation = 30) 
-  )
-
-```
-
-
-```{r}
-# first define a block_list made of fpar ----
-bl <- block_list(
-  fpar(ftext("Two Content + Free Object",
-             fp_text(bold = TRUE))),
-  fpar(
-    ftext("This is from ", fp_text(italic  = TRUE, 
-                                   font.family = "Times New Roman",
-                                   font.size = 30)),
-    ftext("iris", prop = fp_text(color = "red", bold = TRUE, font.size = 30) )
-  )
-)
-
-title_bl <- fpar(
-    ftext("Vector Output & Customized paragraph by officer",
-          fp_text(font.size = 24))
-  )
-
-```
-
-
-```{r}
-doc <- doc %>% 
-  add_slide(layout = "Two Content", master = "Office Theme") %>% 
-  ph_with(value = title_bl, 
-          location = ph_location_type(type = "title") ) %>% 
-  ph_with(value = ft, 
-          location = ph_location_left() ) %>% 
-  ph_with(value = editable_graph,
-          location = ph_location_right() ) %>% 
-  ph_with(value = bl, 
-          location = ph_location(label = "my_name",
-                                 left = 1, top = 6, width = 3, height = 0, 
-                                 bg = "wheat", rotation = 30) )
-
-```
-
 
 # write_pptx
 
 ```{r}
 doc %>% 
-  print(target = "./output/020_supportedContents_with_layouts.pptx")
+  print(target = "./output/020_supportedContents.pptx")
 
 doc
 ```
+
+
