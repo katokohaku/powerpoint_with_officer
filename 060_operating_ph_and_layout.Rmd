@@ -1,0 +1,88 @@
+---
+author: "Satoshi Kato"
+title: "placeholder location and slide layout"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output:
+  html_document:
+    fig_caption: yes
+    pandoc_args:
+      - --from
+      - markdown+autolink_bare_uris+tex_math_single_backslash-implicit_figures
+    keep_md: no
+    toc: yes
+  word_document:
+    toc: yes
+    toc_depth: 3
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(progress = TRUE, 
+                     verbose  = TRUE, 
+                     root.dir = ".")
+
+knitr::opts_chunk$set(collapse = FALSE, 
+                      comment = "#>", 
+                      message = TRUE, 
+                      warning = FALSE, 
+                      include = TRUE,
+                      echo    = TRUE)
+
+```
+
+```{r install.requirements, eval = FALSE}
+install.packages("officer", dependencies = TRUE)
+
+```
+
+```{r require.packages, message=FALSE}
+require(tidyverse)
+library(magrittr)
+
+require(officer)
+require(flextable)
+
+```
+
+# Remove slide(s)
+
+When `index` is not specified, **LAST** slide will be removed.
+
+```{r}
+my_pres <- read_pptx()
+for(i in 1:5) {
+  my_pres <- my_pres %>% 
+  add_slide() %>% 
+  ph_with(
+    value = paste("slide", i), 
+    location = ph_location_type(type = "title") ) 
+}
+
+my_pres %>% length()
+my_pres <- remove_slide(my_pres, index = 2)
+my_pres <- remove_slide(my_pres)
+my_pres %>% print(target = "./output/010_remove_2nd_slide.pptx") 
+
+my_pres %>% length()
+
+for(i in seq_len(length(my_pres))) {
+  my_pres <- remove_slide(my_pres)
+}
+my_pres %>% length()
+
+```
+
+# write_pptx
+
+```{r}
+my_pres %>% 
+  print(target = "./output/070_operation_of_placeholder_and_slide.pptx")
+
+my_pres
+```
