@@ -114,24 +114,19 @@ add_TitleAndContent <- function (
 ) {
   x <- add_slide(x = x, layout = "Title and Content", master = "Office Theme")
   if(!is.null(title)){
-    x <- ph_with(x, value = title,
-                 location = ph_location_type(type = "title"))
+    x <- ph_with(x, value = title,    location = ph_location_type(type = "title"))
   }
   if(!is.null(footer)){
-    x <- ph_with(x, value = footer,
-                 location = ph_location_type(type = "ftr"))
+    x <- ph_with(x, value = footer,   location = ph_location_type(type = "ftr"))
   }
   if(!is.null(date)){
-    x <- ph_with(x, value = date,
-                 location = ph_location_type(type = "dt"))
+    x <- ph_with(x, value = date,     location = ph_location_type(type = "dt"))
   }
   if(!is.null(slideNum)){
-    x <- ph_with(x, value = slideNum,
-                 location = ph_location_type(type = "sldNum"))
+    x <- ph_with(x, value = slideNum, location = ph_location_type(type = "sldNum"))
   }
   if(!is.null(body)){
-    x <- ph_with(x, value = body,
-                 location = ph_location_type(type = "body")) 
+    x <- ph_with(x, value = body,     location = ph_location_type(type = "body")) 
   }
   return(x)
 }
@@ -139,15 +134,16 @@ add_TitleAndContent <- function (
 ```
 
 ```{r}
-my_pres %>% 
+my_pres <- my_pres %>% 
   add_TitleAndContent(
-    title  = "Hello world",
-    body   = gg_plot,
-    footer = "A footer",
-    date   = format(Sys.Date()),
-    slideNum = "slide 1"
+    title    = "Wrpper version",
+    body     = gg_plot,
+    footer   = "A footer",
+    date     = format(Sys.Date()),
+    slideNum = "slide 2"
 )
 
+my_pres %>% length()  # スライドのページ枚数
 ```
 
 
