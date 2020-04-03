@@ -130,6 +130,7 @@ knitr::kable(layout_summary(my_pres))
 
 ```
 
+<<<<<<< HEAD
 ```{r}
 my_pres <- read_pptx()
 my_pres %>% 
@@ -147,6 +148,8 @@ annotate_base(
 )
 
 ```
+=======
+>>>>>>> a2949a1224ac0d71f10e9164d46752542bdb2892
 
 # Add content to a slide
 
@@ -257,8 +260,23 @@ doc %>%
 
 ```
 
+<<<<<<< HEAD
 
 
+=======
+the `Title and Content` slide layout has following placeholder with `type`. 
+
+```{r}
+read_pptx() %>% 
+  layout_properties (
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  select(-master_name) %>%
+  arrange(name, id)
+
+```
+>>>>>>> a2949a1224ac0d71f10e9164d46752542bdb2892
 
 # Remove slide(s)
 
