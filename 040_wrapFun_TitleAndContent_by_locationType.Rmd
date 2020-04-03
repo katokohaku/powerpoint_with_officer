@@ -1,0 +1,161 @@
+---
+author: "Satoshi Kato"
+title: "Wrapper function for officer-pptx"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output:
+  html_document:
+    fig_caption: yes
+    pandoc_args:
+      - --from
+      - markdown+autolink_bare_uris+tex_math_single_backslash-implicit_figures
+    keep_md: no
+    toc: yes
+  word_document:
+    toc: yes
+    toc_depth: 3
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(progress = TRUE, 
+                     verbose  = TRUE, 
+                     root.dir = ".")
+
+knitr::opts_chunk$set(collapse = FALSE, 
+                      comment = "#>", 
+                      message = TRUE, 
+                      warning = FALSE, 
+                      include = TRUE,
+                      echo    = TRUE)
+
+```
+
+```{r install.requirements, eval = FALSE}
+install.packages("officer",      dependencies = TRUE)
+
+```
+
+```{r require.packages, message=FALSE}
+require(tidyverse)
+library(magrittr)
+
+require(officer)
+require(flextable)
+
+```
+
+```{r}
+my_pres <- read_pptx()
+my_pres %>% 
+  layout_summary() %>% 
+  knitr::kable()
+
+```
+
+```{r}
+my_pres %>% layout_properties(
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  select(-master_name) %>%
+  arrange(id) %>% 
+  mutate_at(vars(c("offx","offy","cx","cy")), ~ round(., digits = 2))
+ 
+```
+
+
+```{r}
+library(ggplot2)
+gg_plot <- iris %>% 
+  ggplot(aes(Sepal.Length, Petal.Length, color = Species)) +
+  geom_point(size = 3) + 
+  theme_minimal()
+
+```
+
+set all content to each PH of default "Title and Content" slide-layout.
+
+```{r}
+content_title    <- "Hello world"
+content_footer   <- "A footer"
+content_date     <- format(Sys.Date())
+content_slideNum <- "slide 1"
+content_body     <- gg_plot
+
+```
+
+Add a slide of default "Title and Content" ph-layout.
+
+```{r}
+my_pres <- add_slide(x = my_pres, layout = "Title and Content", master = "Office Theme")
+my_pres <- ph_with(my_pres, value = content_title,    location = ph_location_type(type = "title"))
+my_pres <- ph_with(my_pres, value = content_footer,   location = ph_location_type(type = "ftr"))
+my_pres <- ph_with(my_pres, value = content_date,     location = ph_location_type(type = "dt"))
+my_pres <- ph_with(my_pres, value = content_slideNum, location = ph_location_type(type = "sldNum"))
+my_pres <- ph_with(my_pres, value = content_body,     location = ph_location_type(type = "body")) 
+
+```
+
+
+```{r}
+add_TitleAndContent <- function (
+  x,
+  title    = NULL,
+  footer   = NULL,
+  date     = NULL,
+  slideNum = NULL,
+  body     = NULL
+) {
+  x <- add_slide(x = x, layout = "Title and Content", master = "Office Theme")
+  if(!is.null(title)){
+    x <- ph_with(x, value = title,
+                 location = ph_location_type(type = "title"))
+  }
+  if(!is.null(footer)){
+    x <- ph_with(x, value = footer,
+                 location = ph_location_type(type = "ftr"))
+  }
+  if(!is.null(date)){
+    x <- ph_with(x, value = date,
+                 location = ph_location_type(type = "dt"))
+  }
+  if(!is.null(slideNum)){
+    x <- ph_with(x, value = slideNum,
+                 location = ph_location_type(type = "sldNum"))
+  }
+  if(!is.null(body)){
+    x <- ph_with(x, value = body,
+                 location = ph_location_type(type = "body")) 
+  }
+  return(x)
+}
+  
+```
+
+```{r}
+my_pres %>% 
+  add_TitleAndContent(
+    title  = "Hello world",
+    body   = gg_plot,
+    footer = "A footer",
+    date   = format(Sys.Date()),
+    slideNum = "slide 1"
+)
+
+```
+
+
+# write_pptx
+
+```{r}
+my_pres %>% 
+  print(target = "./output/040_wrap_fun_for_TitleAndContent-layouts.pptx")
+
+my_pres
+```
