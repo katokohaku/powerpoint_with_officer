@@ -37,7 +37,7 @@ knitr::opts_chunk$set(collapse = FALSE,
 ```
 
 ```{r install.requirements, eval = FALSE}
-install.packages("officer",      dependencies = TRUE)
+install.packages("officer", dependencies = TRUE)
 
 ```
 
@@ -50,11 +50,79 @@ require(flextable)
 
 ```
 
-# Just trace
+# Get started
 
-according to 
+```{r}
+# プレゼンレーションの初期化
+my_pres <- read_pptx()
+
+# スライドの追加
+my_pres <- add_slide(x = my_pres)
+
+# コンテンツの追加
+my_pres <- ph_with(
+  x        = my_pres,
+  value    = "Hello World",                   # コンテンツの指定（図表・テキスト等）
+  location = ph_location_type(type = "body")  # コンテンツの設置先の指定
+) 
+
+# プレゼンレーションの出力
+print(my_pres, target = "output/010_HelloWorld.pptx")
+
+# _is_the_same_as_S3_
+# officer:::print.rpptx(
+#   x      = my_pres,
+#   target = "output/010_HelloWorld.pptx"
+# ) 
+
+```
+
+## pipe chain 
+
+```{r}
+read_pptx() %>%                                # プレゼンレーションの初期化
+  add_slide() %>%                              # スライドの追加
+  ph_with(                                     # コンテンツの追加
+    value    = "Hello World",                  # - コンテンツの指定（図表・テキスト等）
+    location = ph_location_type(type = "body") # - コンテンツの設置先の指定
+  ) %>% 
+  print(target = "output/010_HelloWorld.pptx") # プレゼンレーションの出力
+
+
+```
+
+## With customized theme (Master) 
+
+```{r}
+read_pptx(path = "./pptx_template/my_template.pptx") %>%  # プレゼンレーションの初期化
+  add_slide(                                              # スライドの追加
+    master = "my_theme",                                  # - スライドマスターの指定
+    layout = "my_custom"                                  # - スライドレイアウトの指定
+  ) %>% 
+ph_with(                                                  # コンテンツの追加
+    value    = "Hello World",                             # - コンテンツの指定（図表・テキスト等）
+    location = ph_location_type(type = "body")            # - コンテンツの設置先の指定
+  ) %>% 
+  print(target = "output/010_HW_with_template.pptx")      # プレゼンレーションの出力
+
+
+```
+
+
+# Just trace utilities
+
+according to help and
 
 https://davidgohel.github.io/officer/articles/offcran/powerpoint.html
+
+## master layouts and slide layouts
+
+`read_pptx()` uses a PowerPoint file as the initial document. This is the original PowerPoint document where all slide layouts, placeholders for shapes and styles come from. Major points to be aware of are:
+
+- Slide layouts are relative to a master layout. A document can contain one or more master layouts; a master layout can contain one or more slide layouts.
+- A slide layout inherits design properties from its master layout but some properties can be overwritten.
+- Designs and formatting properties of layouts and shapes (placeholders in a layout) are defined within the initial document. There is no R function to modify these values - they must be defined in the initial document.
+
 
 ```{r}
 my_pres <- read_pptx("pptx_template/my_template.pptx")
@@ -65,15 +133,20 @@ knitr::kable(layout_summary(my_pres))
 ```{r}
 my_pres <- read_pptx()
 my_pres %>% 
-  layout_summary()
-
+  layout_properties (
+    master = "Office Theme",      # スライドマスターの指定
+    layout = "Title and Content"  # スライドレイアウトの指定
+  ) %>% 
+  mutate_if(is.numeric, ~round(., digits = 3))
 ```
 
-```{r, eval=FALSE}
-my_pres %>% print( target = "pptx_template/officer_default.pptx") 
+```{r}
+annotate_base(
+  path = NULL,                                     # レイアウトを確認したいPPTXファイル
+  output_file = "output/010_annotated_layout.pptx" # 出力先 
+)
 
 ```
-
 
 # Add content to a slide
 
@@ -82,8 +155,19 @@ Content must be placed on a slide in a new shape.
 `ph_with()` is the unique function you should have to use to add content to a slide. It has 3 arguments, the rpptx object, the object to be printed and the location that define the placeholder where shape will be created.
 
 ```{r}
-my_pres <- add_slide(x = my_pres, layout = "Title and Content", master = "Office Theme")
+my_pres <- add_slide(
+  x      = my_pres,             # スライドを追加したいプレゼンテーションの指定
+  layout = "Title and Content", # 追加したいスライドのレイアウトの指定
+  master = "Office Theme"       # 追加したいレイアウトを持っているマスターの指定
+)
 my_pres
+```
+
+```{r}
+ph_location_type(ph_label = ph_label)
+```
+
+
 ```
 
 **Note that `ph_with` is to be used instead of functions `ph_with_*` and `ph_with_*_at`**
@@ -130,6 +214,24 @@ The following code adds text “Hello world” in a new shape.
 
 That shape will inherit its properties from the placeholder that has type `body`. This is defined in the slide layout used by the slide, i.e. `Title and Content` in our example.
 
+
+## location by placeholder type
+
+placeholder type to look for in the slide layout, one of 'body', 'title', 'ctrTitle', 'subTitle', 'dt', 'ftr', 'sldNum'.
+
+the `Title and Content` slide layout has following placeholder with `type`. 
+
+```{r}
+read_pptx() %>% 
+  layout_properties (
+    layout = "Title and Content",
+    master = "Office Theme"
+  ) %>% 
+  select(-master_name) %>%
+  arrange(name, id)
+
+```
+
 ```{r}
 text_contents <- c(
     "Hello world", 
@@ -152,66 +254,6 @@ doc <- read_pptx() %>%
 
 doc %>% 
   print(target = "./output/010_ph_with_location_type.pptx") 
-
-```
-
-the `Title and Content` slide layout has following placeholder with `type`. 
-
-```{r}
-read_pptx() %>% 
-  layout_properties (
-    layout = "Title and Content",
-    master = "Office Theme"
-  ) %>% 
-  select(-master_name) %>%
-  arrange(name, id)
-
-```
-
-## Enumerate place holders
-
-```{r}
-layout_properties_all <- 
-  read_pptx() %>% 
-  layout_properties(master = "Office Theme") %>% 
-  arrange(name, id)
-  
-layout_names <- layout_properties_all %>% 
-  pull(name) %>% 
-  unique()
-  
-layout_properties_all %>%
-  select(-master_name) #%>% as.matrix()
-layout_names
-
-
-layout_viz <- read_pptx()
-
-i = 1
-for (i in seq_len(NROW(layout_names))) {
-  
-  this_layout <- layout_names[i]
-  this_layout_properties <- layout_properties_all %>% 
-    filter(name == this_layout)
-  
-  layout_viz <- layout_viz %>% add_slide(layout = this_layout)
-  
-  j = 1
-  for (j in seq_len(NROW(this_layout_properties))) {
-    ph_type  <- this_layout_properties$type[j]
-    ph_label <- this_layout_properties$ph_label[j]
-    
-    content <- sprintf("[type = %s] %s", ph_type, ph_label)
-    ph_location <- ph_location_label(ph_label = ph_label)
-    
-    layout_viz <- layout_viz %>% 
-      ph_with(value = content, location = ph_location)
-  }
-}
-
-layout_viz %>% 
-  print(target = "./output/010_layout_with_location_type.pptx") 
-
 
 ```
 
