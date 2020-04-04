@@ -2,7 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-output/*
+output/*.pptx
 *.html
 *.md
 ref/*
+PowerPoint_with_officer.pptx
