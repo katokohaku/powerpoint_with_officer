@@ -259,11 +259,6 @@ doc %>%
   print(target = "./output/010_ph_with_location_type.pptx") 
 
 ```
-
-<<<<<<< HEAD
-
-
-=======
 the `Title and Content` slide layout has following placeholder with `type`. 
 
 ```{r}
@@ -276,34 +271,3 @@ read_pptx() %>%
   arrange(name, id)
 
 ```
->>>>>>> a2949a1224ac0d71f10e9164d46752542bdb2892
-
-# Remove slide(s)
-
-When `index` is not specified, **LAST** slide will be removed.
-
-```{r}
-doc <- read_pptx()
-for(i in 1:5) {
-  doc <- doc %>% 
-  add_slide() %>% 
-  ph_with(
-    value = paste("slide", i), 
-    location = ph_location_type(type = "title") ) 
-}
-
-doc %>% length()
-doc <- remove_slide(doc, index = 2)
-doc <- remove_slide(doc)
-doc %>% print(target = "./output/010_remove_2nd_slide.pptx") 
-
-doc %>% length()
-
-for(i in seq_len(length(doc))) {
-  doc <- remove_slide(doc)
-}
-doc %>% length()
-
-
-```
-
