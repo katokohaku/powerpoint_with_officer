@@ -34,6 +34,9 @@ knitr::opts_chunk$set(collapse = FALSE,
                       include = TRUE,
                       echo    = TRUE)
 
+if (!dir.exists("./output")) {
+  dir.create("./output")
+}
 ```
 
 ```{r install.requirements, eval = FALSE}
